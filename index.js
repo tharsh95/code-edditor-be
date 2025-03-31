@@ -22,7 +22,9 @@ app.use(cors());
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/job-platform')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
-
+app.get('/', (req, res) => {
+  res.send('Hello World');
+});
 // Routes
 app.use('/api/jobs', jobRoutes);
 app.use('/api/submit', codeSubmissionRoutes);
