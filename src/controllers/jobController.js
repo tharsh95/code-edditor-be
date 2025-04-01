@@ -1,17 +1,42 @@
 import mongoose from 'mongoose';
 import openaiService from '../services/openaiService.js';
 import Question from '../models/Question.js';
+import { fetchAndSaveJobs } from '../services/rapidApiService.js';
 
-// @desc    Get all jobs from database
+// @desc    Get all jobs from database with pagination
 // @route   GET /api/jobs
 // @access  Public
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await mongoose.connection.collection('jobs').find({}).toArray();
+    // Get pagination parameters from query string
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count of jobs
+    const totalJobs = await mongoose.connection.collection('jobs').countDocuments();
+    
+    // Get jobs with pagination
+    const jobs = await mongoose.connection.collection('jobs')
+      .find({})
+      .skip(skip)
+      .limit(limit)
+      .sort({ date_created: -1 })
+      .toArray();
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(totalJobs / limit);
     
     res.status(200).json({
       success: true,
-      count: jobs.length,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalJobs,
+        jobsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
       data: jobs
     });
   } catch (error) {
@@ -29,7 +54,7 @@ export const getJobs = async (req, res) => {
 export const getJobById = async (req, res) => {
   try {
     const job = await mongoose.connection.collection('jobs').findOne({
-      _id: new mongoose.Types.ObjectId(req.params.id)
+      id: req.params.id
     });
     
     if (!job) {
@@ -60,7 +85,7 @@ export const getJobById = async (req, res) => {
 // @route   POST /api/jobs/:id/questions
 // @access  Public
 export const generateQuestions = async (req, res) => {
-  console.log("Generating questions");
+
   try {
     const { id } = req.params;
     const { count } = req.body;
@@ -93,7 +118,7 @@ export const generateQuestions = async (req, res) => {
     const questionsData = await openaiService.generateQuestionsFromJobDescription(job, count || 3);
     // Save questions to database
     const savedQuestions = await openaiService.saveQuestions(questionsData, id);
-    console.log(savedQuestions)
+
     
     res.status(201).json({
       success: true,
@@ -126,6 +151,41 @@ export const getQuestions = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getQuestions controller:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server Error'
+    });
+  }
+};
+
+// @desc    Fetch and save jobs from RapidAPI
+// @route   GET /api/jobs/fetch
+// @access  Public
+export const fetchJobsFromAPI = async (req, res) => {
+  console.log("Fetching jobs from API");
+  try {
+    // Get current count of jobs
+    const currentJobCount = await mongoose.connection.collection('jobs').countDocuments();
+    
+    const params = {
+      limit: 10,
+      offset: currentJobCount+10, // Use current job count as offset
+      title_filter: '"Software Engineer"',
+      location_filter: '"India"',
+      description_type: 'text'
+    };
+
+    const result = await fetchAndSaveJobs(params);
+
+    res.status(200).json({
+      success: true,
+      message: 'Jobs fetched and saved successfully',
+      data: result,
+      currentJobCount,
+      offsetUsed: currentJobCount
+    });
+  } catch (error) {
+    console.error('Error in fetchJobsFromAPI controller:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Server Error'

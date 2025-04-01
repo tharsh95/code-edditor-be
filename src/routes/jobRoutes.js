@@ -3,7 +3,8 @@ import {
   getJobs,
   getJobById,
   generateQuestions,
-  getQuestions
+  getQuestions,
+  fetchJobsFromAPI
 } from '../controllers/jobController.js';
 
 const router = express.Router();
@@ -23,5 +24,9 @@ router.post('/:id/questions', generateQuestions);
 // @route   GET /api/jobs/:id/questions
 // @desc    Get questions for a job
 router.get('/:id/questions', getQuestions);
+
+// @route   POST /api/jobs/fetch
+// @desc    Fetch and save jobs from RapidAPI
+router.post('/fetch', fetchJobsFromAPI);
 
 export default router; 
