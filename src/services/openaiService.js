@@ -128,13 +128,17 @@ const saveQuestions = async (questionsData, jobId) => {
  */
 const getCodeSuggestions = async (code, question, language) => {
   try {
-    const systemPrompt = `You are an expert code reviewer specializing in ${language}.
+    const systemPrompt = `
+    Point to be noted before giving suggestions
+    1. The function parameters are passed as a single object, so you need to destructure it,either in the function parameter or in the function body.
+    You are an expert code reviewer specializing in ${language}.
 Your task is to review the submitted code and provide constructive feedback and suggestions for improvement.
-Focus on:
+Focus on: 
+
 1. Code quality and readability
 2. Performance optimizations
 3. Best practices
-4. Potential bugs or edge cases
+4. Potential bugs or edge cases 
 5. Alternative approaches
 Provide your feedback in a clear, structured format.`;
 
@@ -142,6 +146,7 @@ Provide your feedback in a clear, structured format.`;
 
 Title: ${question.title}
 Description: ${question.description}
+Examples: ${question.examples}
 
 Submitted Code:
 ${code}
