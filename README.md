@@ -29,8 +29,8 @@ A Node.js application that fetches job listings from external APIs, generates co
 
 1. Clone the repository
 ```
-git clone <repository-url>
-cd job-platform-api
+git clone https://github.com/tharsh95/code-edditor-be.git
+cd code-editor-be
 ```
 
 2. Install dependencies
@@ -77,7 +77,7 @@ GET /api/jobs/fetch?query=nodejs
 POST /api/jobs/:id/questions
 
 {
-  "count": 3
+  "count": 2
 }
 ```
 
